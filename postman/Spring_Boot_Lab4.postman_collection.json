@@ -1,0 +1,327 @@
+{
+  "info": {
+    "name": "ЛР4 Spring Boot — два REST-сервиса",
+    "description": "Запустите оба сервиса. Сначала выполните запрос 01, затем сравните логи. Папка 02 содержит отдельную проверку со специально остановленным Сервисом 2.",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+  },
+  "variable": [
+    {
+      "key": "service1Url",
+      "value": "http://localhost:8082",
+      "type": "string"
+    },
+    {
+      "key": "service2Url",
+      "value": "http://localhost:8084",
+      "type": "string"
+    }
+  ],
+  "item": [
+    {
+      "name": "01 При работающих сервисах",
+      "item": [
+        {
+          "name": "01. Пересылка запроса",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json",
+                "type": "text"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"uid\": \"1\",\n  \"operationUid\": \"lab4-op-001\",\n  \"systemName\": \"ERP\",\n  \"systemTime\": \"1999-01-01T00:00:00Z\",\n  \"source\": \"Postman\",\n  \"communicationId\": 100,\n  \"templateId\": 8,\n  \"productCode\": 1500,\n  \"smsCode\": 10\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "{{service1Url}}/feedback",
+              "host": [
+                "{{service1Url}}"
+              ],
+              "path": [
+                "feedback"
+              ]
+            },
+            "description": "В логах Сервиса 2: systemName=Service 1, source='service-1' и время передачи."
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "(function () {",
+                  "    const result = pm.response.json();",
+                  "    pm.test(\"HTTP 200\", function () { pm.response.to.have.status(200); });",
+                  "    pm.test(\"code = success\", function () { pm.expect(result.code).to.eql(\"success\"); });",
+                  "    pm.test(\"Поле errorCode\", function () { pm.expect(result.errorCode).to.eql(\"\"); });",
+                  "    pm.test(\"Идентификаторы запроса сохранены\", function () { const input = JSON.parse(pm.request.body.raw); pm.expect(result.uid).to.eql(input.uid); pm.expect(result.operationUid).to.eql(input.operationUid); });",
+                  "})();"
+                ]
+              }
+            }
+          ],
+          "response": []
+        },
+        {
+          "name": "02. Ошибка валидации",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json",
+                "type": "text"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"uid\": \"1\",\n  \"operationUid\": \"lab4-op-001\",\n  \"systemName\": \"ERP\",\n  \"systemTime\": \"1999-01-01T00:00:00Z\",\n  \"source\": \"Postman\",\n  \"communicationId\": 0,\n  \"templateId\": 8,\n  \"productCode\": 1500,\n  \"smsCode\": 10\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "{{service1Url}}/feedback",
+              "host": [
+                "{{service1Url}}"
+              ],
+              "path": [
+                "feedback"
+              ]
+            },
+            "description": "Этот запрос Сервису 2 не пересылается."
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "(function () {",
+                  "    const result = pm.response.json();",
+                  "    pm.test(\"HTTP 400\", function () { pm.response.to.have.status(400); });",
+                  "    pm.test(\"code = failed\", function () { pm.expect(result.code).to.eql(\"failed\"); });",
+                  "    pm.test(\"Поле errorCode\", function () { pm.expect(result.errorCode).to.eql(\"ValidationException\"); });",
+                  "})();"
+                ]
+              }
+            }
+          ],
+          "response": []
+        },
+        {
+          "name": "03. Неподдерживаемый uid",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json",
+                "type": "text"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"uid\": \"123\",\n  \"operationUid\": \"lab4-op-001\",\n  \"systemName\": \"ERP\",\n  \"systemTime\": \"1999-01-01T00:00:00Z\",\n  \"source\": \"Postman\",\n  \"communicationId\": 100,\n  \"templateId\": 8,\n  \"productCode\": 1500,\n  \"smsCode\": 10\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "{{service1Url}}/feedback",
+              "host": [
+                "{{service1Url}}"
+              ],
+              "path": [
+                "feedback"
+              ]
+            },
+            "description": ""
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "(function () {",
+                  "    const result = pm.response.json();",
+                  "    pm.test(\"HTTP 400\", function () { pm.response.to.have.status(400); });",
+                  "    pm.test(\"code = failed\", function () { pm.expect(result.code).to.eql(\"failed\"); });",
+                  "    pm.test(\"Поле errorCode\", function () { pm.expect(result.errorCode).to.eql(\"UnsupportedCodeException\"); });",
+                  "})();"
+                ]
+              }
+            }
+          ],
+          "response": []
+        },
+        {
+          "name": "04. Неизвестная система",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json",
+                "type": "text"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"uid\": \"1\",\n  \"operationUid\": \"lab4-op-001\",\n  \"systemName\": \"OTHER\",\n  \"systemTime\": \"1999-01-01T00:00:00Z\",\n  \"source\": \"Postman\",\n  \"communicationId\": 100,\n  \"templateId\": 8,\n  \"productCode\": 1500,\n  \"smsCode\": 10\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "{{service1Url}}/feedback",
+              "host": [
+                "{{service1Url}}"
+              ],
+              "path": [
+                "feedback"
+              ]
+            },
+            "description": ""
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "(function () {",
+                  "    const result = pm.response.json();",
+                  "    pm.test(\"HTTP 400\", function () { pm.response.to.have.status(400); });",
+                  "    pm.test(\"code = failed\", function () { pm.expect(result.code).to.eql(\"failed\"); });",
+                  "    pm.test(\"Поле errorCode\", function () { pm.expect(result.errorCode).to.eql(\"ValidationException\"); });",
+                  "})();"
+                ]
+              }
+            }
+          ],
+          "response": []
+        },
+        {
+          "name": "05. Прямой запрос к Сервису 2",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json",
+                "type": "text"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"uid\": \"1\",\n  \"operationUid\": \"lab4-op-001\",\n  \"systemName\": \"ERP\",\n  \"systemTime\": \"1999-01-01T00:00:00Z\",\n  \"source\": \"Postman\",\n  \"communicationId\": 100,\n  \"templateId\": 8,\n  \"productCode\": 1500,\n  \"smsCode\": 10\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "{{service2Url}}/feedback",
+              "host": [
+                "{{service2Url}}"
+              ],
+              "path": [
+                "feedback"
+              ]
+            },
+            "description": "Проверка, что приёмник работает. Замера времени передачи нет, потому что запрос не проходил через Сервис 1."
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "(function () {",
+                  "    const result = pm.response.json();",
+                  "    pm.test(\"HTTP 200\", function () { pm.response.to.have.status(200); });",
+                  "    pm.test(\"code = success\", function () { pm.expect(result.code).to.eql(\"success\"); });",
+                  "    pm.test(\"Поле errorCode\", function () { pm.expect(result.errorCode).to.eql(\"\"); });",
+                  "    pm.test(\"Идентификаторы запроса сохранены\", function () { const input = JSON.parse(pm.request.body.raw); pm.expect(result.uid).to.eql(input.uid); pm.expect(result.operationUid).to.eql(input.operationUid); });",
+                  "})();"
+                ]
+              }
+            }
+          ],
+          "response": []
+        }
+      ]
+    },
+    {
+      "name": "02 При остановленном Сервисе 2",
+      "item": [
+        {
+          "name": "06. Сервис 2 недоступен",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json",
+                "type": "text"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"uid\": \"1\",\n  \"operationUid\": \"lab4-op-001\",\n  \"systemName\": \"ERP\",\n  \"systemTime\": \"1999-01-01T00:00:00Z\",\n  \"source\": \"Postman\",\n  \"communicationId\": 100,\n  \"templateId\": 8,\n  \"productCode\": 1500,\n  \"smsCode\": 10\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "{{service1Url}}/feedback",
+              "host": [
+                "{{service1Url}}"
+              ],
+              "path": [
+                "feedback"
+              ]
+            },
+            "description": "Остановите только Сервис 2 и повторите запрос к Сервису 1."
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "(function () {",
+                  "    const result = pm.response.json();",
+                  "    pm.test(\"HTTP 502\", function () { pm.response.to.have.status(502); });",
+                  "    pm.test(\"code = failed\", function () { pm.expect(result.code).to.eql(\"failed\"); });",
+                  "    pm.test(\"Поле errorCode\", function () { pm.expect(result.errorCode).to.eql(\"ForwardingException\"); });",
+                  "})();"
+                ]
+              }
+            }
+          ],
+          "response": []
+        }
+      ]
+    }
+  ]
+}
